@@ -1,6 +1,6 @@
 <h1 align="center">
     <br>
-    <a href="https://github.com/aureleoules/glaze"><img src="https://raw.githubusercontent.com/aureleoules/gocaml/master/assets/logo.svg" alt="GOCAML" width="200"></a>
+    <a href="https://github.com/aureleoules/gocaml"><img src="https://raw.githubusercontent.com/aureleoules/gocaml/master/assets/icon.svg" alt="GOCAML" width="200"></a>
     <br>
     GOCAML
     <br>
