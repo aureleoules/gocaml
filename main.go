@@ -7,8 +7,9 @@ import (
 	"os/signal"
 	"regexp"
 	"strings"
-	"syscall"
 	"time"
+
+	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
@@ -68,17 +69,12 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 func evaluateCode(code string) (string, error) {
 	command := "echo \"" + code + "\" | ocaml"
 	process := exec.Command("bash", "-c", command)
-	go killProcess(process)
+
+	go func() {
+		time.Sleep(3 * time.Second)
+		terminateProc(process.Process.Pid, os.Interrupt)
+	}()
+
 	out, err := process.Output()
 	return string(out), err
-}
-
-func killProcess(process *exec.Cmd) error {
-	time.Sleep(3 * time.Second)
-	return process.Process.Kill()
-}
-
-func removeLastLine(str string) string {
-	arr := strings.Split(str, "\n")
-	return strings.Join(arr[:len(arr)-2], "\n")
 }
