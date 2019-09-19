@@ -52,10 +52,6 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 		code := match[len(match)-1]
-		if strings.Contains(code, " rec ") {
-			s.ChannelMessageSend(m.Message.ChannelID, "**ERROR**\nRecursivity not supported in this environnement.")
-			// return
-		}
 		code = strings.Replace(code, "'", "\\'", -1)
 		code = strings.Replace(code, "\"", "\\"+"\"", -1)
 
@@ -68,10 +64,10 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		//format
 		var formatted string
 		if result != "" {
-		formatted = strings.Replace(result, "        ", "", -1)
-		formatted = strings.Replace(formatted, "   ", " ", -1)
-		formatted = removeLastLine(formatted)
-	}
+			formatted = strings.Replace(result, "        ", "", -1)
+			formatted = strings.Replace(formatted, "   ", " ", -1)
+			formatted = removeLastLine(formatted)
+		}
 		s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```ocaml\n"+formatted+"```")
 	}
 }
@@ -82,7 +78,7 @@ func evaluateCode(code string) (string, error) {
 	go func() {
 		time.Sleep(5 * time.Second)
 		p := exec.Command("bash", "-c", "pkill -f ocamlrun")
-		out, err := p.Output()
+		_, err := p.Output()
 		if err != nil {
 			log.Println(err)
 		}
