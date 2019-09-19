@@ -35,7 +35,7 @@ func main() {
 
 	log.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
 	d.Close()
@@ -66,9 +66,12 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		//format
-		formatted := strings.Replace(result, "        ", "", -1)
+		var formatted string
+		if result != "" {
+		formatted = strings.Replace(result, "        ", "", -1)
 		formatted = strings.Replace(formatted, "   ", " ", -1)
 		formatted = removeLastLine(formatted)
+	}
 		s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```ocaml\n"+formatted+"```")
 	}
 }
@@ -77,10 +80,11 @@ func evaluateCode(code string) (string, error) {
 	command := "echo \"" + code + "\" | ocaml"
 	process := exec.Command("bash", "-c", command)
 	go func() {
-		time.Sleep(3 * time.Second)
-		if process.ProcessState.ExitCode() == -1 {
-			exec.Command("pkill", "ocaml")
-			process.Process.Kill()
+		time.Sleep(5 * time.Second)
+		p := exec.Command("bash", "-c", "pkill -f ocamlrun")
+		out, err := p.Output()
+		if err != nil {
+			log.Println(err)
 		}
 	}()
 	out, err := process.Output()
