@@ -43,19 +43,24 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	mention := "<@" + s.State.User.ID + ">"
 	if strings.Contains(m.Content, mention) {
 
-		reg := regexp.MustCompile("(?s)```(.*?)```")
+		reg := regexp.MustCompile("(?s)```(ocaml)?(.*?)```")
 		match := reg.FindStringSubmatch(m.Content)
 		if match == nil {
 			s.ChannelMessageSend(m.Message.ChannelID, "I don't understand...")
 			return
 		}
-		code := match[1]
+		code := match[len(match)-1]
 		result, err := evaluateCode(code)
 		if err != nil {
 			s.ChannelMessageSend(m.Message.ChannelID, "**ERROR**\n```"+err.Error()+"```")
 			return
 		}
-		s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```"+strings.Replace(result, "        ", "", -1)+"```")
+
+		//format
+		formatted := strings.Replace(result, "        ", "", -1)
+		formatted = strings.Replace(formatted, "   ", " ", -1)
+		formatted = removeLastLine(formatted)
+		s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```ocaml\n"+formatted+"```")
 	}
 }
 
@@ -63,4 +68,9 @@ func evaluateCode(code string) (string, error) {
 	command := "echo \"" + code + "\" | ocaml"
 	out, err := exec.Command("bash", "-c", command).Output()
 	return string(out), err
+}
+
+func removeLastLine(str string) string {
+	arr := strings.Split(str, "\n")
+	return strings.Join(arr[:len(arr)-2], "\n")
 }
