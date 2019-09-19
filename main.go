@@ -52,6 +52,13 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 		code := match[len(match)-1]
+		if strings.Contains(code, " rec ") {
+			s.ChannelMessageSend(m.Message.ChannelID, "**ERROR**\nRecursivity not supported in this environnement.")
+			return
+		}
+		code = strings.Replace(code, "'", "\\'", -1)
+		code = strings.Replace(code, "\"", "\\"+"\"", -1)
+
 		result, err := evaluateCode(code)
 		if err != nil {
 			s.ChannelMessageSend(m.Message.ChannelID, "**ERROR**\n```"+err.Error()+"```")
@@ -71,8 +78,10 @@ func evaluateCode(code string) (string, error) {
 	process := exec.Command("bash", "-c", command)
 
 	go func() {
-		time.Sleep(3 * time.Second)
-		terminateProc(process.Process.Pid, os.Interrupt)
+		time.Sleep(5 * time.Second)
+		if process.ProcessState.ExitCode() == -1 {
+			os.Exit(1)
+		}
 	}()
 
 	out, err := process.Output()
