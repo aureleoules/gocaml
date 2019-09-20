@@ -27,6 +27,7 @@ func main() {
 	d, err := discordgo.New("Bot " + os.Getenv("TOKEN"))
 
 	d.AddHandler(onMessage)
+	d.AddHandler(onMessageUpdate)
 
 	err = d.Open()
 	if err != nil {
@@ -70,6 +71,16 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```ocaml\n"+formatted+"```")
 	}
+}
+
+func onMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
+	message := discordgo.MessageCreate{
+		Message: &discordgo.Message{
+			ChannelID: m.Message.ChannelID,
+			Content:   m.Content,
+		},
+	}
+	onMessage(s, &message)
 }
 
 func evaluateCode(code string) (string, error) {
