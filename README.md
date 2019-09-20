@@ -4,6 +4,8 @@
     <br>
     GOCAML
     <br>
+    <img src="https://travis-ci.org/aureleoules/gocaml.svg?branch=master">   
+    <br>
 </h1>
 
 <h4 align="center">Evaluate CAML on Discord</h4>
