@@ -4,7 +4,7 @@
     <br>
     GOCAML
     <br>
-    <img src="https://travis-ci.org/aureleoules/gocaml.svg?branch=master">   
+    <a href="https://travis-ci.org/aureleoules/gocaml"><img src="https://travis-ci.org/aureleoules/gocaml.svg?branch=master"></a>  
     <br>
 </h1>
 
