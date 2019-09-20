@@ -1,2 +1,8 @@
-serivces:
+language: go
+
+services:
         - docker
+
+before_install:
+        - docker build --no-cache -t ${TRAVIS_REPO_SLUG}:${TRAVIS_COMMIT} .
+        - docker run -d -p 127.0.0.1:9630:9630 ${TRAVIS_REPO_SLUG}:${TRAVIS_COMMIT}
