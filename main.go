@@ -21,12 +21,12 @@ var prefix = "!gocaml"
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
 func main() {
-
+	log.Println("teste")
 	db.Connect(os.Getenv("URI"), os.Getenv("DATABASE"))
 
 	d, err := discordgo.New("Bot " + os.Getenv("TOKEN"))
@@ -103,7 +103,9 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Println(err)
 		}
 	}
+	log.Println(formatted)
 	if ContainsError(formatted) {
+		log.Println(formatted)
 		user.IncrementError()
 	} else {
 		user.IncrementSuccess()
