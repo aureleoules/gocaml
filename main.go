@@ -12,6 +12,7 @@ import (
 	"github.com/aureleoules/gocaml/db"
 	"github.com/aureleoules/gocaml/models"
 	"github.com/bwmarrin/discordgo"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gopkg.in/mgo.v2"
 )
@@ -23,10 +24,10 @@ func init() {
 	if err != nil {
 		log.Println(err)
 	}
+	gin.SetMode(gin.ReleaseMode)
 }
 
 func main() {
-	log.Println("teste")
 	db.Connect(os.Getenv("URI"), os.Getenv("DATABASE"))
 
 	d, err := discordgo.New("Bot " + os.Getenv("TOKEN"))
@@ -40,6 +41,15 @@ func main() {
 	}
 
 	log.Println("Bot is now running.  Press CTRL-C to exit.")
+
+	r := gin.Default()
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status": "success",
+		})
+	})
+	r.Run(":" + os.Getenv("PORT"))
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
