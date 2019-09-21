@@ -5,15 +5,18 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"regexp"
-	"strings"
 	"time"
 
 	"syscall"
 
+	"github.com/aureleoules/gocaml/db"
+	"github.com/aureleoules/gocaml/models"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	"gopkg.in/mgo.v2"
 )
+
+var prefix = "!gocaml"
 
 func init() {
 	err := godotenv.Load()
@@ -23,6 +26,8 @@ func init() {
 }
 
 func main() {
+
+	db.Connect(os.Getenv("URI"), os.Getenv("DATABASE"))
 
 	d, err := discordgo.New("Bot " + os.Getenv("TOKEN"))
 
@@ -43,51 +48,83 @@ func main() {
 }
 
 func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
-	mention := "<@" + s.State.User.ID + ">"
-	if strings.Contains(m.Content, mention) {
+	// don't process bot messages
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
 
-		reg := regexp.MustCompile("(?s)```(ocaml)?(.*?)```")
-		match := reg.FindStringSubmatch(m.Content)
-		if match == nil {
-			s.ChannelMessageSend(m.Message.ChannelID, "I don't understand...")
+	isStats, userID := IsStats(m)
+	if isStats {
+		if userID == "" {
+			users, err := models.GetUsers()
+			if err != nil {
+				log.Println(err)
+			}
+
+			s.ChannelMessageSend(m.Message.ChannelID, ParseStats(users))
 			return
 		}
-		code := match[len(match)-1]
-		code = strings.Replace(code, "'", "\\'", -1)
-		code = strings.Replace(code, "\"", "\\"+"\"", -1)
-
-		result, err := evaluateCode(code)
+		user, err := models.GetUser(userID)
 		if err != nil {
-			s.ChannelMessageSend(m.Message.ChannelID, "**ERROR**\n```"+err.Error()+"```")
-			return
+			log.Println(err)
 		}
+		s.ChannelMessageSend(m.Message.ChannelID, ParseStats([]models.User{user}))
 
-		//format
-		var formatted string
-		if result != "" {
-			formatted = strings.Replace(result, "        ", "", -1)
-			formatted = strings.Replace(formatted, "   ", " ", -1)
-			formatted = removeLastLine(formatted)
+	}
+
+	isEval, code := IsCodeEvaluation(m)
+	if !isEval {
+		return
+	}
+
+	result, err := evaluateCode(code)
+	if err != nil {
+		s.ChannelMessageSend(m.Message.ChannelID, "**RUNTIME ERROR**\n```"+err.Error()+"```")
+		return
+	}
+
+	//format
+	var formatted string
+	if result != "" {
+		formatted = FormatEvaluation(result)
+	}
+
+	s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```ocaml\n"+formatted+"```")
+
+	user, err := models.GetUser(m.Author.ID)
+	if err == mgo.ErrNotFound {
+		u := models.User{
+			DiscordID:     m.Author.ID,
+			Username:      m.Author.Username,
+			Discriminator: m.Author.Discriminator,
 		}
-		s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```ocaml\n"+formatted+"```")
+		user, err = u.Create()
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	if ContainsError(formatted) {
+		user.IncrementError()
+	} else {
+		user.IncrementSuccess()
 	}
 }
 
 func onMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
-	message := discordgo.MessageCreate{
-		Message: &discordgo.Message{
-			ChannelID: m.Message.ChannelID,
-			Content:   m.Content,
-		},
-	}
+	message := discordgo.MessageCreate(*m)
 	onMessage(s, &message)
 }
 
 func evaluateCode(code string) (string, error) {
 	command := "echo \"" + code + "\" | ocaml"
 	process := exec.Command("bash", "-c", command)
+
+	terminated := false
 	go func() {
 		time.Sleep(5 * time.Second)
+		if terminated {
+			return
+		}
 		p := exec.Command("bash", "-c", "pkill -f ocamlrun")
 		_, err := p.Output()
 		if err != nil {
@@ -95,5 +132,6 @@ func evaluateCode(code string) (string, error) {
 		}
 	}()
 	out, err := process.Output()
+	terminated = true
 	return string(out), err
 }
