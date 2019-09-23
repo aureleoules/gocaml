@@ -24,7 +24,6 @@ func IsCodeEvaluation(m *discordgo.MessageCreate) (bool, string) {
 	}
 
 	code := match[len(match)-1]
-	code = strings.Replace(code, "'", "\\'", -1)
 	code = strings.Replace(code, "\"", "\\"+"\"", -1)
 	return true, code
 }
