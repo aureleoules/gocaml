@@ -20,7 +20,6 @@
 ## Get started
 To evaluate CAML code on your discord, simply tag your Discord BOT, and enter your code in a triple backtick block as follows:
 
-> @GOCAML#1234  
 > \`\`\`ocaml  
 > let a = 2;;  
 > \`\`\`  
