@@ -106,7 +106,7 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		formatted = FormatEvaluation(result)
 	}
 
-	s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```ocaml\n"+formatted+"```")
+	s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```"+lang+"\n"+formatted+"```")
 
 	user, err := models.GetUser(m.Author.ID)
 	if err == mgo.ErrNotFound {
