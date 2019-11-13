@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"time"
 
 	"syscall"
@@ -18,6 +20,11 @@ import (
 )
 
 var prefix = "!gocaml"
+
+const (
+	OCAML  string = "ocaml"
+	Python string = "python"
+)
 
 func init() {
 	err := godotenv.Load()
@@ -82,20 +89,20 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	}
 
-	isEval, code := IsCodeEvaluation(m)
+	isEval, code, lang := IsCodeEvaluation(m)
 	if !isEval {
 		return
 	}
 
-	result, err := evaluateCode(code)
+	result, err := evaluateCode(code, lang)
 	if err != nil {
 		s.ChannelMessageSend(m.Message.ChannelID, "**RUNTIME ERROR**\n```"+err.Error()+"```")
 		return
 	}
 
 	//format
-	var formatted string
-	if result != "" {
+	var formatted string = result
+	if result != "" && lang == OCAML {
 		formatted = FormatEvaluation(result)
 	}
 
@@ -113,7 +120,6 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Println(err)
 		}
 	}
-	log.Println(formatted)
 	if ContainsError(formatted) {
 		log.Println(formatted)
 		user.IncrementError()
@@ -127,23 +133,36 @@ func onMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 	onMessage(s, &message)
 }
 
-func evaluateCode(code string) (string, error) {
-	command := "echo \"" + code + "\" | ocaml"
-	process := exec.Command("bash", "-c", command)
+func evaluateCode(code string, lang string) (string, error) {
 
-	terminated := false
-	go func() {
-		time.Sleep(5 * time.Second)
-		if terminated {
-			return
-		}
-		p := exec.Command("bash", "-c", "pkill -f ocamlrun")
-		_, err := p.Output()
-		if err != nil {
-			log.Println(err)
-		}
-	}()
-	out, err := process.Output()
-	terminated = true
-	return string(out), err
+	if lang == OCAML {
+		command := "echo \"" + code + "\" | ocaml"
+		process := exec.Command("bash", "-c", command)
+
+		terminated := false
+		go func() {
+			time.Sleep(5 * time.Second)
+			if terminated {
+				return
+			}
+			p := exec.Command("bash", "-c", "pkill -f ocamlrun")
+			_, err := p.Output()
+			if err != nil {
+				log.Println(err)
+			}
+		}()
+		out, err := process.Output()
+		terminated = true
+		return string(out), err
+	} else if lang == Python {
+
+		code = strings.Replace(code, "\\\"", "\"", -1)
+		cmd := exec.Command("python", "-c", code)
+
+		out, err := cmd.CombinedOutput()
+		log.Println("output", string(out))
+		return string(out), err
+	}
+	return "", errors.New("Language not supported")
+
 }

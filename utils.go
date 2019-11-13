@@ -15,17 +15,19 @@ func removeLastLine(str string) string {
 }
 
 // IsCodeEvaluation checks if discord message contains a code evaluation request, and return sanitized code
-func IsCodeEvaluation(m *discordgo.MessageCreate) (bool, string) {
-	reg := regexp.MustCompile("(?s)```ocaml?(.*?)```")
+func IsCodeEvaluation(m *discordgo.MessageCreate) (bool, string, string) {
+	reg := regexp.MustCompile("(?s)```(ocaml|python)(.*?)```")
 	match := reg.FindStringSubmatch(m.Content)
 
 	if match == nil {
-		return false, ""
+		return false, "", ""
 	}
+
+	lang := match[1]
 
 	code := match[len(match)-1]
 	code = strings.Replace(code, "\"", "\\"+"\"", -1)
-	return true, code
+	return true, code, lang
 }
 
 // FormatEvaluation formats CAML evaluation
