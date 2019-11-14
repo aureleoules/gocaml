@@ -157,6 +157,12 @@ func evaluateCode(code string, lang string) (string, error) {
 	} else if lang == Python {
 
 		code = strings.Replace(code, "\\\"", "\"", -1)
+
+		err_msg := VerifyPythonCode(code)
+		if (err_msg != "") {
+			return "", errors.New(err_msg)
+		}
+
 		cmd := exec.Command("python", "-c", code)
 
 		out, err := cmd.CombinedOutput()
@@ -166,3 +172,4 @@ func evaluateCode(code string, lang string) (string, error) {
 	return "", errors.New("Language not supported")
 
 }
+

@@ -69,3 +69,30 @@ func ParseStats(users []models.User) string {
 	result += "```"
 	return result
 }
+
+
+func VerifyPythonCode(code string) (string) {
+	illegalModules := []string {
+		"os",
+	}
+	illegalFunctions := []string {
+		"open",
+	}
+
+	for _, m := range illegalModules {
+		r, _ := regexp.MatchString(`^[^#"]?\s*(import([\s,_\w\\])*`+m+`)`, code)
+		if (r) {
+			return "Illegal module imported: '"+m+"'"
+		}
+	}
+
+	for _, f := range illegalFunctions {
+		r, _ := regexp.MatchString(`^[^#"]*`+f+`\(.*`, code)
+		if (r) {
+			return "Illegal function used: '"+f+"'"
+		}
+	}
+
+	return ""
+}
+
