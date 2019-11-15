@@ -82,7 +82,7 @@ func VerifyPythonCode(code string) error {
 	}
 
 	for _, m := range illegalModules {
-		r, _ := regexp.MatchString(`^[^#"]?\s*(import([\s,_\w\\])*`+m+`)`, code)
+		r, _ := regexp.MatchString(`^[^#"]?\s*((import|from)([\s,_\w\\])*`+m+`)`, code)
 		if r {
 			return errors.New("Illegal module imported: '" + m + "'")
 		}
