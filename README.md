@@ -27,8 +27,6 @@ To evaluate CAML code on your discord, simply tag your Discord BOT, and enter yo
 will result in  
 
 ```ocaml
-OCaml version 4.02.3
-
 # val a : int = 2
 ```  
 
