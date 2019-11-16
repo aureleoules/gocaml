@@ -77,17 +77,19 @@ func VerifyPythonCode(code string) error {
 	}
 	illegalFunctions := []string{
 		"open",
+		"exec",
+		"__import__",
 	}
 
 	for _, m := range illegalModules {
-		r, _ := regexp.MatchString(`^[^#"]?\s*(import([\s,_\w\\])*`+m+`)`, code)
+		r, _ := regexp.MatchString(`^[^#"]?\s*((import|from)([\s,_\w\\])*`+m+`)`, code)
 		if r {
 			return errors.New("Illegal module imported: '" + m + "'")
 		}
 	}
 
 	for _, f := range illegalFunctions {
-		r, _ := regexp.MatchString(`^[^#"]*`+f+`\(.*`, code)
+		r, _ := regexp.MatchString(`^[^#"]*`+f+`\s*\(.*`, code)
 		if r {
 			return errors.New("Illegal function used: '" + f + "'")
 		}
