@@ -2,7 +2,7 @@
     <br>
     <a href="https://github.com/aureleoules/gocaml"><img src="https://raw.githubusercontent.com/aureleoules/gocaml/master/assets/icon.png" alt="GOCAML" width="200"></a>
     <br>
-    GOCAML
+    	GOCAML
     <br>
     <a href="https://travis-ci.org/aureleoules/gocaml"><img src="https://travis-ci.org/aureleoules/gocaml.svg?branch=master"></a>  
     <br>
