@@ -136,12 +136,10 @@ func onMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 func evaluateCode(code string, lang string) (string, error) {
 
 	if lang == OCAML {
-		command := "echo \"" + code + "\" | ocaml"
+		command := "echo \"" + code + "\" | ocaml -no-version"
 		process := exec.Command("bash", "-c", command)
-
 		terminated := false
-		go func() {
-			time.Sleep(5 * time.Second)
+		time.AfterFunc(5 * time.Second, func() {
 			if terminated {
 				return
 			}
@@ -150,7 +148,7 @@ func evaluateCode(code string, lang string) (string, error) {
 			if err != nil {
 				log.Println(err)
 			}
-		}()
+		})
 		out, err := process.Output()
 		terminated = true
 		return string(out), err
@@ -163,10 +161,16 @@ func evaluateCode(code string, lang string) (string, error) {
 			return "", err
 		}
 
-		cmd := exec.Command("python", "-c", code)
-
+		cmd := exec.Command("python3", "-c", code)
+		terminated := false
+		time.AfterFunc(5 * time.Second, func() {
+			if terminated {
+				return
+			}
+			syscall.Kill(cmd.Process.Pid, syscall.SIGKILL)
+		})
 		out, err := cmd.CombinedOutput()
-		log.Println("output", string(out))
+		terminated = true
 		return string(out), err
 	}
 	return "", errors.New("Language not supported")
