@@ -134,7 +134,7 @@ func onMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 }
 
 func evaluateCode(code string, lang string) (string, error) {
-
+        log.Println(code)
 	if lang == OCAML {
 		command := "echo \"" + code + "\" | ocaml -no-version"
 		process := exec.Command("bash", "-c", command)
