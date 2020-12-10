@@ -11,12 +11,9 @@ import (
 
 	"syscall"
 
-	"github.com/aureleoules/gocaml/db"
-	"github.com/aureleoules/gocaml/models"
 	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"gopkg.in/mgo.v2"
 )
 
 var prefix = "!gocaml"
@@ -35,7 +32,7 @@ func init() {
 }
 
 func main() {
-	db.Connect(os.Getenv("URI"), os.Getenv("DATABASE"))
+	// db.Connect(os.Getenv("URI"), os.Getenv("DATABASE"))
 
 	d, err := discordgo.New("Bot " + os.Getenv("TOKEN"))
 
@@ -70,24 +67,24 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	isStats, userID := IsStats(m)
-	if isStats {
-		if userID == "" {
-			users, err := models.GetUsers()
-			if err != nil {
-				log.Println(err)
-			}
+	// isStats, userID := IsStats(m)
+	// if isStats {
+	// 	if userID == "" {
+	// 		users, err := models.GetUsers()
+	// 		if err != nil {
+	// 			log.Println(err)
+	// 		}
 
-			s.ChannelMessageSend(m.Message.ChannelID, ParseStats(users))
-			return
-		}
-		user, err := models.GetUser(userID)
-		if err != nil {
-			log.Println(err)
-		}
-		s.ChannelMessageSend(m.Message.ChannelID, ParseStats([]models.User{user}))
+	// 		s.ChannelMessageSend(m.Message.ChannelID, ParseStats(users))
+	// 		return
+	// 	}
+	// 	user, err := models.GetUser(userID)
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 	}
+	// 	s.ChannelMessageSend(m.Message.ChannelID, ParseStats([]models.User{user}))
 
-	}
+	// }
 
 	isEval, code, lang := IsCodeEvaluation(m)
 	if !isEval {
@@ -108,24 +105,24 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	s.ChannelMessageSend(m.Message.ChannelID, "**Evaluation**:\n```"+lang+"\n"+formatted+"```")
 
-	user, err := models.GetUser(m.Author.ID)
-	if err == mgo.ErrNotFound {
-		u := models.User{
-			DiscordID:     m.Author.ID,
-			Username:      m.Author.Username,
-			Discriminator: m.Author.Discriminator,
-		}
-		user, err = u.Create()
-		if err != nil {
-			log.Println(err)
-		}
-	}
-	if ContainsError(formatted) {
-		log.Println(formatted)
-		user.IncrementError()
-	} else {
-		user.IncrementSuccess()
-	}
+	// user, err := models.GetUser(m.Author.ID)
+	// if err == mgo.ErrNotFound {
+	// 	u := models.User{
+	// 		DiscordID:     m.Author.ID,
+	// 		Username:      m.Author.Username,
+	// 		Discriminator: m.Author.Discriminator,
+	// 	}
+	// 	user, err = u.Create()
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 	}
+	// }
+	// if ContainsError(formatted) {
+	// 	log.Println(formatted)
+	// 	user.IncrementError()
+	// } else {
+	// 	user.IncrementSuccess()
+	// }
 }
 
 func onMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
@@ -134,12 +131,12 @@ func onMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 }
 
 func evaluateCode(code string, lang string) (string, error) {
-        log.Println(code)
+	log.Println(code)
 	if lang == OCAML {
 		command := "echo \"" + code + "\" | ocaml -no-version"
 		process := exec.Command("bash", "-c", command)
 		terminated := false
-		time.AfterFunc(5 * time.Second, func() {
+		time.AfterFunc(5*time.Second, func() {
 			if terminated {
 				return
 			}
@@ -163,7 +160,7 @@ func evaluateCode(code string, lang string) (string, error) {
 
 		cmd := exec.Command("python3", "-c", code)
 		terminated := false
-		time.AfterFunc(5 * time.Second, func() {
+		time.AfterFunc(5*time.Second, func() {
 			if terminated {
 				return
 			}
